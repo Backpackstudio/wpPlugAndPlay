@@ -3,7 +3,7 @@ Simplifies creation of WordPress plugins.  An abstract class of WordPress Plug a
 
 An example how easy is to create a new plugin by using **wpPlugAndPlay**:
 
-<!-- language: php -->
+```php
     require_once dirname(__FILE__) . '/frameworks/wpPlugAndPlay.php';
     
     final class mySimplePlugin extends wpPlugAndPlay
@@ -33,16 +33,22 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
 
 	mySimplePlugin::Plug();
 
+```
+
 Thats it! You are ready to fly!
 
 Additionally you can hook immediately additional functionality by specifying related method.
 
+```php
 	mySimplePlugin::Plug('\myNamespace\myExtension::Hook');
+```
 	
 On some cases your plugin might require minimum PHP version to run properly. To avoid fatal collapse of Wordpress, you can specify minimum version of PHP and wpPlugAndPlay will not load your plugin if system requirements are not met.
 
+```php
 	mySimplePlugin::Plug('\myNamespace\myExtension::Hook', '5.6');
+```
 	
-On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue shown instead.
+On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue is shown instead.
 
 Please stay tuned for documentation update. ;) 
