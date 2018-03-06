@@ -16,7 +16,7 @@ if (! class_exists('wpPlugAndPlay')) {
      * as it also improves plugins performance by using the same base class for all inherited plugins.
      *
      * Create folder "frameworks" in your plugin folder and add all your PHP scripts.
-     * If your scripts use namespaces, then use appropriate subfolder names to enable automatic load of used classes.
+     * If your scripts use namespaces, then use appropriate sub-folder names to enable automatic load of used classes.
      * For example class if your class \MyNamespace\MyClass resides on path ./frameworks/MyNamespace/MyClass.php,
      * it's loaded automatically by wpPlugAndPlay, no need to write any line of include statements now.
      *
@@ -219,12 +219,12 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Determines wheter current version of PHP is smaller than given version number.
-         * If current PHP version is smaller than given, then returns FALSE, othewise TRUE.
+         * Determines whether current version of PHP is smaller than given version number.
+         * If current PHP version is smaller than given, then returns FALSE, otherwise TRUE.
          *
          * @param string $php_version
          *            Version number.
-         * @return boolean If current PHP version is smaller then returns FALSE, othewise TRUE.
+         * @return boolean If current PHP version is smaller then returns FALSE, otherwise TRUE.
          */
         final public static function isPhpVersionValid($php_version)
         {
@@ -337,12 +337,30 @@ if (! class_exists('wpPlugAndPlay')) {
             return false;
         }
 
+        /**
+         * Generates proper absooute uri from given relative path.
+         * You dont have to worry about actual location of your plugin by using this method.
+         * Please nothe, this method does not validate existence of given file/folder.
+         *
+         * @param string $path
+         *            Path relative to the plugin root direcotry.
+         * @return string Absolute url.
+         */
         final public static function getUri($path = '')
         {
             $path = ltrim($path, '\\/');
             return self::getSpec()->plugin_url . $path;
         }
 
+        /**
+         * Generates proper absooute path from given relative path.
+         * You dont have to worry about actual location of your plugin by using this method.
+         * Please nothe, this method does not validate existence of given file/folder.
+         *
+         * @param string $path
+         *            Path relative to the plugin root direcotry.
+         * @return string Absolute path.
+         */
         final public static function getPath($path = '')
         {
             $path = ltrim($path, '\\/');
@@ -354,6 +372,14 @@ if (! class_exists('wpPlugAndPlay')) {
             return strtolower(self::getSpecByName('plugin_class_short') . '_' . str_replace('-', '_', sanitize_key($type . '_' . pathinfo($uri, PATHINFO_FILENAME))));
         }
 
+        /**
+         * Ads script and styles into collection.
+         * This method is intended for internal usage only
+         * Do not use this method directly, use addStyle, addAdminStyle, addScript or addAdminScript instead.
+         *
+         * @param array $reg_data            
+         * @return array
+         */
         final protected static function addScripts($reg_data = null)
         {
             static $collection;
@@ -366,20 +392,49 @@ if (! class_exists('wpPlugAndPlay')) {
             return $collection;
         }
 
-        final protected static function addAdminScript($relative_path, $dependency = array(), $media = 'all')
+        /**
+         * Ads back-end script into the scripts que.
+         * Makes very easy to add scripts into que at the early stages of WordPress execution.
+         *
+         * @param string $relative_path
+         *            Relative path of the script. Relative to the plugin root directory.
+         *            Default empty.
+         * @param array $dependency
+         *            Optional. An array of registered script handles this script depends on.
+         *            Default empty array.
+         * @param boolean $footer
+         *            Optional. Whether to enqueue the script before </body> instead of in the <head>.
+         *            Default 'false'.
+         */
+        final protected static function addAdminScript($relative_path, $dependency = array(), $footer = false)
         {
             $uri = self::getUri($relative_path);
             $reg_data = array(
                 'handle' => self::getScriptHandle($uri, 'script'),
                 'uri' => $uri,
                 'dependency' => $dependency,
-                'media' => $media,
+                'footer' => $footer,
                 'type' => 'script',
                 'admin' => true
             );
             self::addScripts($reg_data);
         }
 
+        /**
+         * Ads back-end css file into the styles que.
+         * Makes very easy to add styles into que at the early stages of WordPress execution.
+         *
+         * @param string $relative_path
+         *            Relative path of the style. Relative to the plugin root directory.
+         *            Default empty.
+         * @param array $dependency
+         *            Optional. An array of registered stylesheet handles this stylesheet depends on.
+         *            Default empty array.
+         * @param string $media
+         *            Optional. The media for which this stylesheet has been defined.
+         *            Default 'all'. Accepts media types like 'all', 'print' and 'screen', or media queries like
+         *            '(orientation: portrait)' and '(max-width: 640px)'.
+         */
         final protected static function addAdminStyle($relative_path, $dependency = array(), $media = 'all')
         {
             $uri = self::getUri($relative_path);
@@ -394,20 +449,49 @@ if (! class_exists('wpPlugAndPlay')) {
             self::addScripts($reg_data);
         }
 
-        final protected static function addScript($relative_path, $dependency = array(), $media = 'all')
+        /**
+         * Ads front-end script into the scripts que.
+         * Makes very easy to add scripts into que at the early stages of WordPress execution.
+         *
+         * @param string $relative_path
+         *            Relative path of the script. Relative to the plugin root directory.
+         *            Default empty.
+         * @param array $dependency
+         *            Optional. An array of registered script handles this script depends on.
+         *            Default empty array.
+         * @param boolean $footer
+         *            Optional. Whether to enqueue the script before </body> instead of in the <head>.
+         *            Default 'false'.
+         */
+        final protected static function addScript($relative_path, $dependency = array(), $footer = false)
         {
             $uri = self::getUri($relative_path);
             $reg_data = array(
                 'handle' => self::getScriptHandle($uri, 'script'),
                 'uri' => $uri,
                 'dependency' => $dependency,
-                'media' => $media,
+                'footer' => $footer,
                 'type' => 'script',
                 'admin' => false
             );
             self::addScripts($reg_data);
         }
 
+        /**
+         * Ads front-end css file into styles que.
+         * Makes very easy to add styles into que at the early stages of WordPress execution.
+         *
+         * @param string $relative_path
+         *            Relative path of the style. Relative to the plugin root directory.
+         *            Default empty.
+         * @param array $dependency
+         *            Optional. An array of registered stylesheet handles this stylesheet depends on.
+         *            Default empty array.
+         * @param string $media
+         *            Optional. The media for which this stylesheet has been defined.
+         *            Default 'all'. Accepts media types like 'all', 'print' and 'screen', or media queries like
+         *            '(orientation: portrait)' and '(max-width: 640px)'.
+         */
         final protected static function addStyle($relative_path, $dependency = array(), $media = 'all')
         {
             $uri = self::getUri($relative_path);
@@ -424,6 +508,8 @@ if (! class_exists('wpPlugAndPlay')) {
 
         /**
          * Loads plugin translation file.
+         * Method is called automatically during WordPress execution if plugin is initialized via ::Plug() command
+         * and TextDomain metadata defined in plugin metadata.
          *
          * @return boolean
          */
@@ -436,6 +522,10 @@ if (! class_exists('wpPlugAndPlay')) {
             return false;
         }
 
+        /**
+         * Enqueues WordPress back-end scripts and styles.
+         * Method is called automatically during WordPress execution if plugin is initialized via ::Plug() command.
+         */
         final public static function enqueueAdminStylesAndScripts()
         {
             if (is_admin()) {
@@ -448,13 +538,17 @@ if (! class_exists('wpPlugAndPlay')) {
                     }
                     if (isset($collection['admin']['script']) && count($collection['admin']['script']) > 0) {
                         foreach ($collection['admin']['script'] as $key => $script) {
-                            wp_enqueue_script($key, $script['uri'], $script['dependency'], null, $script['media']);
+                            wp_enqueue_script($key, $script['uri'], $script['dependency'], null, $script['footer']);
                         }
                     }
                 }
             }
         }
 
+        /**
+         * Enqueues WordPress front-end scripts and styles.
+         * Method is called automatically during WordPress execution if plugin is initialized via ::Plug() command.
+         */
         final public static function enqueueStylesAndScripts()
         {
             if (! is_admin()) {
@@ -467,7 +561,7 @@ if (! class_exists('wpPlugAndPlay')) {
                     }
                     if (isset($collection['wp']['script']) && count($collection['wp']['script']) > 0) {
                         foreach ($collection['wp']['script'] as $key => $script) {
-                            wp_enqueue_script($key, $script['uri'], $script['dependency'], null, $script['media']);
+                            wp_enqueue_script($key, $script['uri'], $script['dependency'], null, $script['footer']);
                         }
                     }
                 }
@@ -475,12 +569,20 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Predefined procedures for plugging an instance WordPress plugin based on wpPlugAndPlay.
+         * Predefined procedure to initialize an instance of WordPress plugin based on wpPlugAndPlay.
          * You can ignore this method and create your own method if needed.
-         * Simplifies plugin creation by adding all basic action hooks for you.
+         * Simplifies plugin creation and initialization by creating all basic action hooks for you.
          *
-         * @param string $hook            
-         * @param string $min_php_version            
+         * @see https://codex.wordpress.org/Plugin_API/Action_Reference Plugin API/Action Reference
+         *     
+         * @param string $hook
+         *            Optional. You can specify additional method to execute after the WordPress theme is initialized.
+         *            This hook is called during page load, after the WordPress theme is initialized.
+         *            It is generally used to perform basic setup, registration, and init actions after the theme becomes available.
+         *            Please see Wordpress documentation for more details.
+         * @param string $min_php_version
+         *            Optional.Minimum required PHP version. If running version of PHP is lower, plugin is not hooked and an admin notice is shown instead.
+         *            Default value is "5.4".
          * @return boolean
          */
         final public static function Plug($hook = null, $min_php_version = '5.4')
