@@ -1,5 +1,5 @@
 # wpPlugAndPlay
-Simplifies creation of WordPress plugins.  An abstract class of WordPress Plug and Play plugin which simplifies creation of **singleton WordPress plugin instances**. Becomes vey handy if you have to create multiple plugins, as decreses amount of code neede to write and but also improves dramatically plugins performance by using the same base class for all inherited plugins.
+Simplifies creation of WordPress plugins.  An abstract class of WordPress Plug and Play plugin which simplifies creation of **singleton WordPress plugin instances**. Becomes vey handy if you have to create multiple plugins, as decreses amount of code neede to write and also improves dramatically plugins performance by using the same base class for all inherited plugins.
 
 An example how easy is to create a new plugin by using **wpPlugAndPlay**:
 
@@ -9,10 +9,6 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
     final class mySimplePlugin extends wpPlugAndPlay
     {
     
-        /**
-         * {@inheritdoc}
-         * @see wpPlugAndPlay::init()
-         */
         protected function init()
         {
             static $initialized;
@@ -37,13 +33,13 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
 
 Thats it! You are ready to fly!
 
-Additionally you can hook immediately additional functionality by specifying related method.
+Additionally you can immediately hook additional functionality by specifying related method.
 
 ```php
     mySimplePlugin::Plug('\myNamespace\myExtension::Hook');
 ```
 	
-On some cases your plugin might require minimum PHP version to run properly. To avoid fatal collapse of Wordpress, you can specify minimum version of PHP and wpPlugAndPlay will not load your plugin if system requirements are not met.
+On some cases your plugin require minimum PHP version to run properly. To avoid fatal collapse of Wordpress, you can specify minimum version of PHP and wpPlugAndPlay will not load your plugin if system requirements are not met.
 
 ```php
     mySimplePlugin::Plug('\myNamespace\myExtension::Hook', '5.6');
