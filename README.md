@@ -31,7 +31,7 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
         }
     }
 
-	mySimplePlugin::Plug();
+    mySimplePlugin::Plug();
 
 ```
 
