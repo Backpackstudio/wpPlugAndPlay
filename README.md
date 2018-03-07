@@ -1,5 +1,5 @@
 # wpPlugAndPlay
-Simplifies creation of WordPress plugins.  An abstract class of WordPress Plug and Play plugin which simplifies creation of **singleton WordPress plugin instances**. Becomes vey handy if you have to create multiple plugins, as decreses amount of code neede to write and also improves dramatically plugins performance by using the same base class for all inherited plugins.
+Simplifies creation of WordPress plugins.  An abstract class of WordPress Plug and Play plugin which simplifies creation of **singleton WordPress plugin instances**. Becomes vey handy if you have to create multiple plugins, as decreases amount of code needed to write and also improves dramatically plugins performance by using the same base class for all inherited plugins.
 
 An example how easy is to create a new plugin by using **wpPlugAndPlay**:
 
@@ -58,7 +58,7 @@ A slow website means users will potentially leave this website before it even lo
 Note: wpPlugAndPlay uses singleton pattern, so your plugin is always singleton object trough entire lifecycle of WordPress request.
 
 ## Autoloading PHP classes
-wpPlugAndPlay comes with built in feature allowing PHP to load automatically the classes or interfaces which are placed in ./framworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
+wpPlugAndPlay comes with built in feature allowing PHP to load automatically the classes or interfaces which are placed in ./frameworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
 
 Note: Autoloading is not available if using PHP in CLI interactive mode.
 
