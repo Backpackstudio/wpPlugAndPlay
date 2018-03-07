@@ -36,7 +36,7 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
 
 Thats it! You are ready to fly!
 
-##Plugin initialisation
+## Plugin initialisation
 
 Additionally you can immediately hook extra functionality by specifying related method. This is also the preferred way to attach your functionality to your plugin.
 
@@ -45,7 +45,7 @@ Additionally you can immediately hook extra functionality by specifying related 
 ```
 On this case you should define class "myExtension" in file ./frameworks/myNamespace/myExtension.php and its loaded automatically by PHP, no need to write include statements.
 
-##Autoloading PHP classes
+## Autoloading PHP classes
 wpPlugAndPlay comes with built in feature allowing PHP to load the classes or interfaces which are placed in ./framworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
 
 Note: Autoloading is not available if using PHP in CLI interactive mode.
