@@ -8,7 +8,7 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
     
     final class mySimplePlugin extends wpPlugAndPlay
     {
-		public static function minPhpVersion(){return '5.6';}
+        public static function minPhpVersion(){return '5.6';}
     		
         protected function init()
         {
