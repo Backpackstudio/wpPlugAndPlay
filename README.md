@@ -85,9 +85,9 @@ If you don't need PHP version validation, then you can return FALSE from  minPhp
 
 On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue is shown instead.
 
-## Plugin Options page
+## Options page
 
-wpPlugAndPlay comes with built in plugin Options page. It generates basic options page for your plugin, so you only have add desired sections and fields for your plugin settings. There are 2 predefined methods to easily add sections and fields:
+wpPlugAndPlay comes with built in WordPress Admin Options page especially for your plugin only. It generates basic options page, so you only have to add desired sections and fields into your plugin options/settings page. There are 2 predefined methods to easily add sections and fields:
 
 * **addOptionsSection** - to add section into your plugin options
 * **addOptionsField** - to add fields into your options sections
