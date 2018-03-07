@@ -50,7 +50,7 @@ wpPlugAndPlay comes with built in feature allowing PHP to load the classes or in
 
 Note: Autoloading is not available if using PHP in CLI interactive mode.
 
-##PHP version check
+## PHP version check
 
 On some cases your plugin require minimum PHP version to run properly. To avoid fatal collapse of Wordpress, you can specify minimum version of PHP and wpPlugAndPlay will not load your plugin if system requirements are not met. For this purpose you have to define method minPhpVersion. 
 
