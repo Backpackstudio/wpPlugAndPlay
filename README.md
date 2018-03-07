@@ -29,7 +29,7 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
             self::addScript('assets/js/image-tags.js');
         }
     }
-	//Initialise plugin
+    //Initialise plugin
     mySimplePlugin::Plug();
 
 ```
