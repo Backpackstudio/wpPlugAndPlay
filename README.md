@@ -104,6 +104,10 @@ Below is an example how to add options field into section.
 ```
 On this case you have do define method showFieldSerial to handle field rendering. 
 
+### Debugging info
+
+At the bottom of your plugin Options page is automatically added section containing some debugging information, which comes useful and handy for both, for site administrators and plugin developers. Debugging output is hidden by default, just tap on title "Debug" at the bottom of plugin options page to reveal it, tap again to hide it.
+
 ..
 
 Please stay tuned for documentation update. ;) 
