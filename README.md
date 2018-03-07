@@ -38,6 +38,12 @@ Thats it! You are ready to fly!
 
 ## Plugin initialisation
 
+To initialise plugin you have to run very simple code. You just have to call predefined method "Plug", for example:
+
+```php
+    mySimplePlugin::Plug();
+```
+
 Additionally you can immediately hook extra functionality by specifying related method. This is also the preferred way to attach your functionality to your plugin.
 
 ```php
@@ -78,5 +84,26 @@ If you don't need PHP version validation, then you can return FALSE from  minPhp
 
 
 On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue is shown instead.
+
+## Plugin Options page
+
+wpPlugAndPlay comes with built in plugin Options page. It generates basic options page for your plugin, so you only have add desired sections and fields for your plugin settings. There are 2 predefined methods to easily add sections and fields:
+
+* **addOptionsSection** - to add section into your plugin options
+* **addOptionsField** - to add fields into your options sections
+
+Below is an example how to add section.
+
+```php
+    self::addOptionsSection ('mysection_id', 'Section Title');
+```
+Below is an example how to add options field into section.
+
+```php
+    self:: addOptionsField ('mysection_id', 'my_plugin_serial', 'Field Title', '\myNamespace\myPlgOptions::showFieldSerial');
+```
+On this case you have do define method showFieldSerial to handle field rendering. 
+
+..
 
 Please stay tuned for documentation update. ;) 
