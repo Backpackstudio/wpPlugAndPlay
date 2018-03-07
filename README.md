@@ -1,7 +1,7 @@
 # wpPlugAndPlay
 Simplifies creation of WordPress plugins.  An abstract class of WordPress Plug and Play plugin which simplifies creation of **singleton WordPress plugin instances**. Becomes vey handy if you have to create multiple plugins, as decreases amount of code needed to write and also improves dramatically plugins performance by using the same base class for all inherited plugins.
 
-An example how easy is to create a new plugin by using **wpPlugAndPlay**:
+An example to show how easy is to create a new plugin by using **wpPlugAndPlay**:
 
 ```php
     require_once dirname(__FILE__) . '/frameworks/wpPlugAndPlay.php';
@@ -55,7 +55,7 @@ A slow website means users will potentially leave this website before it even lo
 * Use **static methods** only for WordPress actions and filters. PERIOD.
 * Use singleton classes for objects which you need the entire request lifecycle in a WordPress application.
 
-Note: wpPlugAndPlay uses singleton pattern, so your plugin is always singleton object trough entire lifecycle of WordPress request.
+Note: wpPlugAndPlay uses singleton pattern, so your plugin is always singleton object trough entire lifecycle of WordPress request. wpPlugAndPay also offers an abstract class to use singleton pattern, so you can easily write singleton classes for your plugin.
 
 ## Autoloading PHP classes
 wpPlugAndPlay comes with built in feature allowing PHP to load automatically the classes or interfaces which are placed in ./frameworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
