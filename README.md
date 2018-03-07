@@ -75,15 +75,15 @@ On some cases your plugin require minimum PHP version to run properly. To avoid 
 ```php
     public static function minPhpVersion(){return '5.6';}
 ```
+On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue is shown instead.
 
-If you don't need PHP version validation, then you can return FALSE from  minPhpVersion. To avoid fatal collapse of WordPress because of PHP version issues, it's strongly recommended to set minimum PHP version required for your plugin.
+If you don't need PHP version validation, then you can return FALSE from  minPhpVersion.
 
 ```php
     public static function minPhpVersion(){return false;}
 ```
 
-
-On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue is shown instead.
+To avoid fatal collapse of WordPress because of PHP version issues, it's strongly recommended to set minimum PHP version required for your plugin.
 
 ## Options page
 
