@@ -66,7 +66,7 @@ Note: wpPlugAndPlay uses singleton pattern, so your plugin is always singleton o
 ## Autoloading PHP classes
 wpPlugAndPlay comes with built in feature allowing PHP to load automatically the classes or interfaces which are placed in ./frameworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
 
-Note: Autoloading is not available if using PHP in CLI interactive mode.
+Note: Autoloading is not available if using PHP in CLI interactive mode. (CLI - command-line interface or command language interpreter). On most of cases you don’t have to worry about.
 
 ## PHP version check
 
