@@ -45,6 +45,18 @@ Additionally you can immediately hook extra functionality by specifying related 
 ```
 On this case you should define class "myExtension" in file ./frameworks/myNamespace/myExtension.php and its loaded automatically by PHP, no need to write include statements.
 
+### Performance
+A slow website means users will potentially leave this website before it even loads. Badly coded WordPress plugins can decrease load time of website dramatically. Proper coding can keep to run WordPress site fast and smooth. By using wpPlugAndPlay properly you can write plugins, which doesn't decrease WordPress speed dramatically. wpPlugAndPlay supports these WP code optimisation recommendations:
+
+* Keep your plugin class very small and simple, divide all your functionality into separate classes and load it if only really necessary.
+* Chunk your code into **multiple classes**, each class into separate file.
+* Use **namespaces**
+* Use **WP actions and filters** to hook your functionality
+* Use **static methods** only for WordPress actions and filters. PERIOD.
+* Use singleton classes for objects which you need the entire request lifecycle in a WordPress application.
+
+Note: wpPlugAndPlay uses singleton pattern, so your plugin is always singleton object trough entire lifecycle of WordPress request.
+
 ## Autoloading PHP classes
 wpPlugAndPlay comes with built in feature allowing PHP to load the classes or interfaces which are placed in ./framworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
 
