@@ -27,6 +27,21 @@ if (! class_exists('wpPlugAndPlay')) {
     {
 
         /**
+         * All child classes should have this method defined.
+         * Method is called at the moment of singular object creation.
+         */
+        abstract protected function init();
+
+        /**
+         * All child classes should have this method defined.
+         * Method is called when php version validation is required.
+         * If you don't need PHP version validation return false.
+         *
+         * @return string|boolean
+         */
+        abstract public static function minPhpVersion();
+
+        /**
          * Disabled for public access.
          *
          * @ignore
@@ -38,10 +53,54 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * All child classes should have this method defined.
-         * Method is called at the moment of singular object creation.
+         * Disables cloning of current object.
+         *
+         * @ignore
+         *
          */
-        abstract protected function init();
+        final private function __clone()
+        {
+            ;
+        }
+
+        /**
+         * Determines whether current version of PHP is smaller than given version number.
+         * If current PHP version is smaller than given, then returns FALSE, otherwise TRUE.
+         *
+         * @param string $php_version
+         *            Version number.
+         * @return boolean If current PHP version is smaller then returns FALSE, otherwise TRUE.
+         */
+        final public static function isPhpVersionValid($php_version)
+        {
+            if (version_compare(PHP_VERSION, $php_version, '>=')) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Returns the "Late Static Binding" class name.
+         *
+         * @return string
+         */
+        final protected static function getClassName()
+        {
+            return get_called_class();
+        }
+
+        /**
+         * Generates and returns full name of given static method.
+         * For example, "myMethod" for class "\MyNameSpace\MyClass" returns "\MyNameSpace\MyClass::myMethod".
+         * Please note, this method does not validate existence of method.
+         *
+         * @param string $method_name            
+         * @return string
+         */
+        final protected static function getStaticCall($method_name)
+        {
+            return sprintf('\\%s::%s', self::getClassName(), $method_name);
+        }
 
         /**
          * Returns an instance of currents singular object.
@@ -66,40 +125,7 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Disables cloning of current object.
-         *
-         * @ignore
-         *
-         */
-        final private function __clone()
-        {
-            ;
-        }
-
-        /**
-         * Returns the "Late Static Binding" class name.
-         *
-         * @return string
-         */
-        final protected static function getClassName()
-        {
-            return get_called_class();
-        }
-
-        /**
-         * Generates and returns string for static call of specified method.
-         * For example, "myMethod" for class "\MyNameSpace\MyClass" returns "\MyNameSpace\MyClass::myMethod".
-         *
-         * @param string $method_name            
-         * @return string
-         */
-        final protected static function getStaticCall($method_name)
-        {
-            return sprintf('\\%s::%s', self::getClassName(), $method_name);
-        }
-
-        /**
-         * Returns list of called class methods.
+         * Returns list of methods of called class.
          *
          * @return array
          */
@@ -158,10 +184,12 @@ if (! class_exists('wpPlugAndPlay')) {
                     'loadClass'
                 );
                 $plg_vars->php_autoloader_call = implode('::', $plg_vars->php_autoloader);
-                $plg_vars->language_dir = self::getPath('language');
+                $plg_vars->language_dir = call_user_func(self::getStaticCall('getPath'), 'language');
                 if (! file_exists($plg_vars->language_dir)) {
                     $plg_vars->language_dir = false;
                 }
+                $plg_vars->min_php_version = call_user_func(self::getStaticCall('minPhpVersion'));
+                $plg_vars->options_page = strtolower(sanitize_key($plg_vars->plugin_class . '_options'));
             }
             return $plg_vars;
         }
@@ -190,48 +218,91 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Returns containing plugin runtime specifications, metadata and information about extended class.
+         * Generates proper absolute uri from given relative path.
+         * You don't have to worry about actual location of your plugin by using this method.
+         * Please note, this method does not validate existence of given file/folder.
          *
+         * @param string $path
+         *            Path relative to the plugin root directory.
+         * @return string Absolute url.
+         */
+        final public static function getUri($path = '')
+        {
+            $path = ltrim($path, '\\/');
+            return self::getSpec()->plugin_url . $path;
+        }
+
+        /**
+         * Generates proper absolute path from given relative path.
+         * You don't have to worry about actual location of your plugin by using this method.
+         * Please note, this method does not validate existence of given file/folder.
+         *
+         * @param string $path
+         *            Path relative to the plugin root directory.
+         * @return string Absolute path.
+         */
+        final public static function getPath($path = '')
+        {
+            $path = ltrim($path, '\\/');
+            return self::getSpec()->plugin_dir . $path;
+        }
+
+        /**
+         * Converts given array into html string containing given array as list.
+         *
+         * @param array $array            
          * @return string
          */
-        final public static function getDebugInfo()
+        final protected static function convertArrayIntoHtmlUl($array)
         {
+            $out = '<ul class="ul-disc">';
+            foreach ($array as $key => $elem) {
+                if (! is_array($elem)) {
+                    $out .= sprintf('<li><span>%s %s</span></li>', is_int($key) ? '' : $key . ': ', $elem);
+                } else
+                    $out .= sprintf('<li><span>%s</span>%s</li>', $key, self::convertArrayIntoHtmlUl($elem));
+            }
+            $out .= '</ul>';
+            return $out;
+        }
+
+        /**
+         * Returns string containing plugin runtime specifications, metadata and information about extended class.
+         *
+         * @param boolean $as_html
+         *            Optional. Returns output in html format if TRUE, otherwise in simple text format.
+         * @return string
+         */
+        final public static function getDebugInfo($as_html = false)
+        {
+            $my_class = self::getClassName();
             $ext_reflect = new \ReflectionClass(__CLASS__);
             $ext_methods = $ext_reflect->getMethods();
             foreach ($ext_methods as $key => $value) {
                 $ext_methods[$key] = $value->name;
-                if ($value->name == 'init' || $value->name == '__construct' || $value->name == '__clone') {
-                    unset($ext_methods[$key]);
-                }
             }
+            $hide_methods = array(
+                'init',
+                '__construct',
+                '__clone'
+            );
+            $ext_methods = array_diff($ext_methods, $hide_methods);
             sort($ext_methods);
             $info = array(
-                self::getClassName() => array(
+                $my_class => array(
                     'plugin' => self::getMetadata(),
                     'extends' => array(
-                        'class' => __CLASS__,
                         'file' => __FILE__,
-                        'methods' => $ext_methods
+                        'class' => __CLASS__,
+                        'reserved_methods' => $ext_methods
                     )
                 )
             );
-            return print_r($info, true);
-        }
-
-        /**
-         * Determines whether current version of PHP is smaller than given version number.
-         * If current PHP version is smaller than given, then returns FALSE, otherwise TRUE.
-         *
-         * @param string $php_version
-         *            Version number.
-         * @return boolean If current PHP version is smaller then returns FALSE, otherwise TRUE.
-         */
-        final public static function isPhpVersionValid($php_version)
-        {
-            if (version_compare(PHP_VERSION, $php_version, '>=')) {
-                return true;
+            if ($as_html === true) {
+                $info[$my_class]['plugin'] = (array) $info[$my_class]['plugin'];
+                return self::convertArrayIntoHtmlUl($info);
             }
-            return false;
+            return print_r($info, true);
         }
 
         /**
@@ -276,14 +347,15 @@ if (! class_exists('wpPlugAndPlay')) {
 
         /**
          * Notice about outdated PHP version displayed near the top of admin pages.
+         * This method is executed automatically if needed by WordPress if plugin is initialized by using method "Plug".
          */
         final public static function showNoticePhpVersion()
         {
             if (is_admin()) {
                 $plg_data = self::getMetadata();
                 $msg[] = '<div class="updated"><p>';
-                $msg[] = sprintf('%s is not hooked!<br>', isset($plg_data->Name) ? 'Plugin <strong>' . $plg_data->Name . '</strong>' : ' Class <strong>' . $plg_data->plugin_class . '</strong>');
-                $msg[] = 'Your current PHP version is ' . PHP_VERSION . ', which is lower than required. Please check plugin requirements for more details.';
+                $msg[] = sprintf('%s is not fully loaded!<br>', isset($plg_data->Name) ? 'Plugin <strong>' . $plg_data->Name . '</strong>' : ' Class <strong>' . $plg_data->plugin_class . '</strong>');
+                $msg[] = sprintf('Your current PHP version is %s, which is lower than required %s. Please check plugin requirements for more details.', PHP_VERSION, $plg_data->min_php_version);
                 $msg[] = '</p></div>';
                 echo implode(PHP_EOL, $msg);
             }
@@ -291,6 +363,7 @@ if (! class_exists('wpPlugAndPlay')) {
 
         /**
          * Register given function as __autoload() implementation.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
          *
          * @see spl_autoload_register
          * @param string|array $autoload_function            
@@ -315,16 +388,17 @@ if (! class_exists('wpPlugAndPlay')) {
 
         /**
          * Loads specified class if available.
+         * This method is executed automatically by PHP if plugin is initialized by using method "Plug".
          *
          * @param string $class
          *            Class name.
          * @return boolean
          */
-        public static function loadClass($class)
+        final public static function loadClass($class)
         {
             static $path;
             if (empty($path)) {
-                $path = self::getSpec()->plugin_frameworks;
+                $path = call_user_func(self::getStaticCall('getSpecByName'), 'plugin_frameworks');
             }
             if (! empty($class) && ! empty($path)) {
                 $class_file = ('\\' != DIRECTORY_SEPARATOR) ? DIRECTORY_SEPARATOR . str_replace('\\', DIRECTORY_SEPARATOR, $class) . '.php' : DIRECTORY_SEPARATOR . $class . '.php';
@@ -338,38 +412,16 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Generates proper absooute uri from given relative path.
-         * You dont have to worry about actual location of your plugin by using this method.
-         * Please nothe, this method does not validate existence of given file/folder.
+         * Generates and returns key for specified uri, which can be used as WordPress scripts/styles handle.
          *
-         * @param string $path
-         *            Path relative to the plugin root direcotry.
-         * @return string Absolute url.
+         * @param string $uri            
+         * @param string $type
+         *            Optional. Default value "css". Recommended values "css" or "script"
+         * @return string
          */
-        final public static function getUri($path = '')
-        {
-            $path = ltrim($path, '\\/');
-            return self::getSpec()->plugin_url . $path;
-        }
-
-        /**
-         * Generates proper absooute path from given relative path.
-         * You dont have to worry about actual location of your plugin by using this method.
-         * Please nothe, this method does not validate existence of given file/folder.
-         *
-         * @param string $path
-         *            Path relative to the plugin root direcotry.
-         * @return string Absolute path.
-         */
-        final public static function getPath($path = '')
-        {
-            $path = ltrim($path, '\\/');
-            return self::getSpec()->plugin_dir . $path;
-        }
-
         final public static function getScriptHandle($uri, $type = 'css')
         {
-            return strtolower(self::getSpecByName('plugin_class_short') . '_' . str_replace('-', '_', sanitize_key($type . '_' . pathinfo($uri, PATHINFO_FILENAME))));
+            return strtolower(self::getSpec()->plugin_class_short . '_' . str_replace('-', '_', sanitize_key($type . '_' . pathinfo($uri, PATHINFO_FILENAME))));
         }
 
         /**
@@ -507,24 +559,8 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Loads plugin translation file.
-         * Method is called automatically during WordPress execution if plugin is initialized via ::Plug() command
-         * and TextDomain metadata defined in plugin metadata.
-         *
-         * @return boolean
-         */
-        final public static function loadTextDomain()
-        {
-            $plugin_data = self::getMetadata();
-            if (isset($plugin_data->TextDomain)) {
-                return load_plugin_textdomain($plugin_data->TextDomain, false, $plugin_data->language_dir);
-            }
-            return false;
-        }
-
-        /**
          * Enqueues WordPress back-end scripts and styles.
-         * Method is called automatically during WordPress execution if plugin is initialized via ::Plug() command.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
          */
         final public static function enqueueAdminStylesAndScripts()
         {
@@ -547,7 +583,7 @@ if (! class_exists('wpPlugAndPlay')) {
 
         /**
          * Enqueues WordPress front-end scripts and styles.
-         * Method is called automatically during WordPress execution if plugin is initialized via ::Plug() command.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
          */
         final public static function enqueueStylesAndScripts()
         {
@@ -569,53 +605,142 @@ if (! class_exists('wpPlugAndPlay')) {
         }
 
         /**
-         * Predefined procedure to initialize an instance of WordPress plugin based on wpPlugAndPlay.
-         * You can ignore this method and create your own method if needed.
-         * Simplifies plugin creation and initialization by creating all basic action hooks for you.
+         * Returns ID of plugin options page.
          *
-         * @see https://codex.wordpress.org/Plugin_API/Action_Reference Plugin API/Action Reference
-         *     
-         * @param string $hook
-         *            Optional. You can specify additional method to execute after the WordPress theme is initialized.
-         *            This hook is called during page load, after the WordPress theme is initialized.
-         *            It is generally used to perform basic setup, registration, and init actions after the theme becomes available.
-         *            Please see Wordpress documentation for more details.
-         * @param string $min_php_version
-         *            Optional.Minimum required PHP version. If running version of PHP is lower, plugin is not hooked and an admin notice is shown instead.
-         *            Default value is "5.4".
-         * @return boolean
+         * @return string
          */
-        final public static function Plug($hook = null, $min_php_version = '5.4')
+        final public static function getOptionsPage()
         {
-            static $try_plug;
-            if (empty($try_plug)) {
-                $i = self::getInstance();
-                // Plug plugin only once
-                $try_plug = true;
-                // Detect PHP version
-                if ($i::isPhpVersionValid($min_php_version) == false) {
-                    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-                    $plg_data = self::getMetadata();
-                    $name = isset($plg_data->Name) ? 'Plugin ' . $plg_data->Name : 'Plugin loader ' . $plg_data->plugin_class;
-                    error_log(sprintf('PHP version: %s requires PHP version %s. Actual PHP version is %s. in %s on line %s', $name, $min_php_version, PHP_VERSION, $backtrace[0]['file'], $backtrace[0]['line']));
-                    self::HookMe('showNoticePhpVersion', 'admin_notices');
-                    return false;
+            return self::getSpecByName('options_page');
+        }
+
+        final protected static function getOptionsSections($section = null)
+        {
+            static $options_sections;
+            if (empty($options_sections)) {
+                $options_sections = array();
+            }
+            if (! is_null($section) && $section instanceof stdClass && isset($section->id)) {
+                $options_sections[$section->id] = $section;
+            }
+            return $options_sections;
+        }
+
+        final protected static function getOptionsFields($field = null)
+        {
+            static $options_fields;
+            if (empty($options_fields)) {
+                $options_fields = array();
+            }
+            if (! is_null($field) && $field instanceof stdClass && isset($field->id)) {
+                $options_fields[$field->id] = $field;
+            }
+            return $options_fields;
+        }
+
+        final public static function addOptionsSection($section_id, $title, $description = null)
+        {
+            $section = new stdClass();
+            $section->id = sanitize_key($section_id);
+            $section->title = trim($title);
+            $section->description = is_null($description) ? null : trim($description);
+            self::getOptionsSections($section);
+        }
+
+        final public static function addOptionsField($section_id, $id, $title, $callback)
+        {
+            $field = new stdClass();
+            $field->id = sanitize_key($id);
+            $field->section_id = sanitize_key($section_id);
+            $field->title = trim($title);
+            $field->callback = $callback;
+            self::getOptionsFields($field);
+        }
+
+        final public static function showOptionSectionHeader($section)
+        {
+            if (is_array($section) && isset($section['id'])) {
+                $sections = self::getOptionsSections();
+                if (is_array($sections) && isset($sections[$section['id']])) {
+                    $section_obj = $sections[$section['id']];
+                    echo $section_obj->description;
                 }
-                // Register autoloader for plugin frameworks
-                self::registerAutoLoad();
-                // Add additional hook if defined
-                if (! empty($hook)) {
-                    add_action('after_setup_theme', $hook);
+            }
+        }
+
+        /**
+         * Renders plugin Options page on WordPress admin.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
+         */
+        final public static function showOptionsPage()
+        {
+            $plg_data = self::getMetadata();
+            // First part of options page
+            $html = array();
+            $html[] = '<div class="wrap">';
+            $html[] = sprintf('<h1><span class="dashicons dashicons-admin-plugins" style="width: 29px; height: 29px; font-size: 24px; vertical-align: middle; margin-right: 16px;"></span>%s</h1>', $plg_data->Name);
+            $html[] = '<div class="options-wrap-inner">';
+            $html[] = '<hr>';
+            $html[] = '<form action="options.php" method="post">';
+            echo implode(PHP_EOL, $html);
+            // Developer defined part of options page
+            settings_fields($plg_data->options_page);
+            do_action($plg_data->options_page, $plg_data);
+            do_settings_sections($plg_data->options_page);
+            // Second part of options page
+            $html = array();
+            $html[] = get_submit_button();
+            $html[] = '</form>';
+            $html[] = '<hr>';
+            $html[] = sprintf('<h2 id="plugin-debug-info-header" style="cursor: pointer;"><span class="dashicons dashicons-editor-code" style="width: 16px; height: 16px; font-size: 16px; margin-right: 8px;"></span>%s</h2>', __('Debug'));
+            $html[] = '<div id="plugin-debug-info-box" class="plugin-debug-info" style="padding : 0 30px 0 30px; display: none;">';
+            // postbox-container
+            $html[] = self::getDebugInfo(true);
+            $html[] = '</div>';
+            $html[] = '<hr>';
+            $html[] = '</div>';
+            $html[] = '</div>';
+            $html[] = '<script>!function($){$(document).ready(function(){$(\'#plugin-debug-info-header\').click(function(){$(\'#plugin-debug-info-box\').toggle(\'slow\')})})}(jQuery);</script>';
+            echo implode(PHP_EOL, $html);
+        }
+
+        /**
+         * Add plugin options page as sub-page into the WordPress Admin Settings menu.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
+         */
+        final public static function registerOptionsPage()
+        {
+            static $added;
+            if (empty($added)) {
+                $added = true;
+                $plg_data = self::getMetadata();
+                add_options_page($plg_data->Name, $plg_data->Name, 'manage_options', $plg_data->options_page, self::getStaticCall('showOptionsPage'));
+            }
+        }
+
+        /**
+         * Adds all user defined sections and fields for plugin options page into WordPress.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
+         */
+        final public static function registerOptions()
+        {
+            $options_page = self::getOptionsPage();
+            register_setting($options_page, $options_page);
+            // sections
+            $sections = self::getOptionsSections();
+            if (is_array($sections) && count($sections) > 0) {
+                foreach ($sections as $key => $item) {
+                    $callback = ! empty($item->description) ? self::getStaticCall('showOptionSectionHeader') : null;
+                    add_settings_section($item->id, $item->title, $callback, $options_page);
                 }
-                // Enqueue scripts and styles
-                self::HookMe('enqueueStylesAndScripts', 'wp_enqueue_scripts', PHP_INT_MAX);
-                self::HookMe('enqueueAdminStylesAndScripts', 'admin_enqueue_scripts', PHP_INT_MAX);
-                self::HookMe('loadTextDomain', 'plugins_loaded');
-                return true;
-            } else {
-                $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
-                error_log(sprintf('PHP Coding: Method "%s" is called several times. Please check your code. in %s on line %s', self::getClassName() . '->' . __FUNCTION__, $backtrace[0]['file'], $backtrace[0]['line']));
-                return false;
+            }
+            // fields
+            $fields = self::getOptionsFields();
+            if (is_array($fields) && count($fields) > 0) {
+                foreach ($fields as $key => $item) {
+                    $item->options_page = $options_page;
+                    add_settings_field($item->id, $item->title, $item->callback, $options_page, $item->section_id);
+                }
             }
         }
 
@@ -623,13 +748,16 @@ if (! class_exists('wpPlugAndPlay')) {
          * Hooks specified method on to a specific WordPress or used defined action.
          * Simplifies to hook any public method of plugin class to specific action.
          * Used method should be public and static.
-         * Example: self::HookMe('loadTextDomain', 'plugins_loaded');
-         * Example: MyPlugin::HookMe('loadTextDomain', 'plugins_loaded');
+         * Example: self::hookMe('loadTextDomain', 'plugins_loaded');
+         * Example: MyPlugin::hookMe('loadTextDomain', 'plugins_loaded');
          *
          * If you use action name also for related method, then you can only specify the method name.
-         * Example: self::HookMe('plugins_loaded');
+         * Example: self::hookMe('plugins_loaded');
          *
-         * @param string $method
+         * If class constant min_php_version is defined, then php version is validated before adding hook and if
+         * PHP version is lower than required then hook si nat addend and an admin notice is shown instead.
+         *
+         * @param string $method_name
          *            The name of the public static method you wish to be called.
          * @param string $wp_action_tag
          *            The name of the action to which the $method is hooked.
@@ -641,11 +769,113 @@ if (! class_exists('wpPlugAndPlay')) {
          *            in the order in which they were added to the action.
          * @param int $accepted_args
          *            Optional. The number of arguments the function accepts. Default 1.
+         * @return boolean
          */
-        final public static function HookMe($method, $wp_action_tag = null, $priority = 10, $accepted_args = 1)
+        final public static function hookMe($method_name, $wp_action_tag = null, $priority = 10, $accepted_args = 1)
         {
-            $wp_action_tag = is_null($wp_action_tag) ? $method : $wp_action_tag;
-            add_action($wp_action_tag, self::getStaticCall($method), $priority, $accepted_args);
+            $wp_action_tag = is_null($wp_action_tag) ? $method_name : $wp_action_tag;
+            $min_php_version = call_user_func(self::getStaticCall('minPhpVersion'));
+            if ($min_php_version && ! self::isPhpVersionValid($min_php_version)) {
+                $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+                $plg_data = self::getMetadata();
+                $name = isset($plg_data->Name) ? 'Plugin ' . $plg_data->Name : 'Plugin loader ' . $plg_data->plugin_class;
+                error_log(sprintf('PHP version: %s requires PHP version %s. Actual PHP version is %s. in %s on line %s', $name, $min_php_version, PHP_VERSION, $backtrace[0]['file'], $backtrace[0]['line']));
+                add_action('admin_notices', self::getStaticCall('showNoticePhpVersion'));
+                return false;
+            }
+            add_wp_action:
+            return add_action($wp_action_tag, self::getStaticCall($method_name), $priority, $accepted_args);
+        }
+
+        /**
+         * Executes specified method when WordPress back-end is initialized so you cn register all fields for options page.
+         * Use self::addOptionsSection and self::addOptionsField to register options sections and fields.
+         *
+         * @param string $method_name
+         *            Name of method. This method should be defined in your plugin class.
+         * @return boolean
+         */
+        final public static function hookOptions($method_name)
+        {
+            return self::hookMe($method_name, 'admin_init', 0 - PHP_INT_MAX);
+        }
+
+        /**
+         * Executes specified method when header of options page of plugin is rendered.
+         *
+         * @param string $method_name
+         *            Name of method. This method should be defined in your plugin class.
+         * @return boolean
+         */
+        final public static function hookOptionsHeader($method_name)
+        {
+            return self::hookMe($method_name, self::getOptionsPage());
+        }
+
+        /**
+         * Loads plugin translation file.
+         * This method is executed automatically by WordPress if plugin is initialized by using method "Plug".
+         *
+         * @return boolean
+         */
+        final public static function loadTextDomain()
+        {
+            $plugin_data = self::getMetadata();
+            if (isset($plugin_data->TextDomain)) {
+                return load_plugin_textdomain($plugin_data->TextDomain, false, $plugin_data->language_dir);
+            }
+            return false;
+        }
+
+        /**
+         * Predefined procedure to initialize an instance of WordPress plugin based on wpPlugAndPlay.
+         * You can ignore this method and create your own method if needed.
+         * Simplifies plugin creation and initialization by creating all basic action hooks for you.
+         *
+         * @see https://codex.wordpress.org/Plugin_API/Action_Reference Plugin API/Action Reference
+         *     
+         * @param string $hook
+         *            Optional. You can specify additional method to execute after the WordPress theme is initialized.
+         *            This hook is called during page load, after the WordPress theme is initialized.
+         *            It is generally used to perform basic setup, registration, and init actions after the theme becomes available.
+         *            Please see Wordpress documentation for more details.
+         * @return boolean
+         */
+        final public static function Plug($hook = null)
+        {
+            static $try_plug;
+            if (empty($try_plug)) {
+                $try_plug = true;
+                // Detect PHP version if needed
+                $min_php_version = call_user_func(self::getStaticCall('minPhpVersion'));
+                if ($min_php_version && ! self::isPhpVersionValid($min_php_version)) {
+                    $plg_data = call_user_func(self::getStaticCall('getMetadata'));
+                    $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+                    $name = isset($plg_data->Name) ? 'Plugin ' . $plg_data->Name : 'Plugin loader ' . $plg_data->plugin_class;
+                    error_log(sprintf('PHP version: %s requires PHP version %s. Actual PHP version is %s. in %s on line %s', $name, $min_php_version, PHP_VERSION, $backtrace[0]['file'], $backtrace[0]['line']));
+                    add_action('admin_notices', self::getStaticCall('showNoticePhpVersion'));
+                    return false;
+                }
+                // Register autoloader for plugin frameworks
+                self::registerAutoLoad();
+                // Initialize plugin
+                $i = self::getInstance();
+                // Add additional hook if defined
+                if (! empty($hook)) {
+                    add_action('after_setup_theme', $hook);
+                }
+                // Enqueue scripts and styles
+                $i::hookMe('enqueueStylesAndScripts', 'wp_enqueue_scripts', PHP_INT_MAX);
+                $i::hookMe('enqueueAdminStylesAndScripts', 'admin_enqueue_scripts', PHP_INT_MAX);
+                $i::hookMe('loadTextDomain', 'plugins_loaded');
+                $i::hookMe('registerOptionsPage', 'admin_menu', 1 - PHP_INT_MAX);
+                $i::hookMe('registerOptions', 'admin_init', 1 - PHP_INT_MAX);
+                return true;
+            } else {
+                $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+                error_log(sprintf('PHP Coding: Method "%s" is called several times. Please check your code. in %s on line %s', self::getClassName() . '->' . __FUNCTION__, $backtrace[0]['file'], $backtrace[0]['line']));
+                return false;
+            }
         }
     }
 }
