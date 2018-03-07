@@ -8,43 +8,63 @@ An example how easy is to create a new plugin by using **wpPlugAndPlay**:
     
     final class mySimplePlugin extends wpPlugAndPlay
     {
-    
+		public static function minPhpVersion(){return '5.6';}
+    		
         protected function init()
         {
             static $initialized;
             if (empty($initialized)) {
                 $initialized = true;
+                //Attach my scripts and styles to WordPress
                 self::myScriptsAndStyles();
             }
         }
     
         protected static function myScriptsAndStyles()
         {
+            //Attach these scripts and styles to WordPress
             self::addAdminStyle('assets/css/admin-options-page.css');
             self::addStyle('assets/css/front-end-improvements.css');
             self::addAdminScript('assets/js/posts-editor-addons.js');
             self::addScript('assets/js/image-tags.js');
         }
     }
-
+	//Initialise plugin
     mySimplePlugin::Plug();
 
 ```
 
 Thats it! You are ready to fly!
 
-Additionally you can immediately hook additional functionality by specifying related method.
+##Plugin initialisation
+
+Additionally you can immediately hook extra functionality by specifying related method. This is also the preferred way to attach your functionality to your plugin.
 
 ```php
     mySimplePlugin::Plug('\myNamespace\myExtension::Hook');
 ```
-	
-On some cases your plugin require minimum PHP version to run properly. To avoid fatal collapse of Wordpress, you can specify minimum version of PHP and wpPlugAndPlay will not load your plugin if system requirements are not met.
+On this case you should define class "myExtension" in file ./frameworks/myNamespace/myExtension.php and its loaded automatically by PHP, no need to write include statements.
+
+##Autoloading PHP classes
+wpPlugAndPlay comes with built in feature allowing PHP to load the classes or interfaces which are placed in ./framworks folder in your plugin directory. It supports namespaces. For example class \MyNamespace\MyClass should be defined in file ./frameworks/MyNamespace/MyClass.php and its loaded automatically. No need to write any code to include your PHP scripts.
+
+Note: Autoloading is not available if using PHP in CLI interactive mode.
+
+##PHP version check
+
+On some cases your plugin require minimum PHP version to run properly. To avoid fatal collapse of Wordpress, you can specify minimum version of PHP and wpPlugAndPlay will not load your plugin if system requirements are not met. For this purpose you have to define method minPhpVersion. 
 
 ```php
-    mySimplePlugin::Plug('\myNamespace\myExtension::Hook', '5.6');
+    public static function minPhpVersion(){return '5.6';}
 ```
-	
+
+If you don't need PHP version validation, then you can return FALSE from  minPhpVersion. To avoid fatal collapse of WordPress because of PHP version issues, it's strongly recommended to set minimum PHP version required for your plugin.
+
+```php
+    public static function minPhpVersion(){return false;}
+```
+
+
 On this case your plugin is not loaded if PHP version is lower than 5.6 and an admin notice about PHP version issue is shown instead.
 
 Please stay tuned for documentation update. ;) 
